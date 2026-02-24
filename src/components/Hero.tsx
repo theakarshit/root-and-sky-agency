@@ -1,79 +1,45 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
-// Sprouting Leaf Component with wind physics
-const Leaf = ({ cx, cy, angle, scale = 1, delay }: { cx: number, cy: number, angle: number, scale?: number, delay: number }) => {
-    const flutterDuration = 3 + Math.random() * 3;
-
-    return (
-        <motion.g
-            style={{ x: cx, y: cy }}
-            initial={{ scale: 0, opacity: 0, rotate: angle }}
-            animate={{ scale: scale, opacity: 1, rotate: angle }}
-            transition={{ delay, duration: 1, type: "spring", bounce: 0.5 }}
-        >
-            <motion.g
-                style={{ originX: "0px", originY: "0px" }}
-                animate={{ rotate: [0, 10, -5, 0] }}
-                transition={{
-                    duration: flutterDuration,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: delay + Math.random()
-                }}
-            >
-                {/* Elegant curving stem */}
-                <path d="M0,0 Q1.5,-1.5 3.5,0" stroke="currentColor" strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                {/* Leaf shape extending from the stem */}
-                <path
-                    d="M3.5,0 C5,-4 8.5,-4 11.5,-1.5 C8.5,1.5 5,4 3.5,0 Z"
-                    fill="currentColor"
-                    opacity="0.85"
-                />
-            </motion.g>
-        </motion.g>
-    );
-};
-
-type LeafData = { cx: number; cy: number; angle: number; delayOffset: number; scale?: number };
-
 // Generative SVG Vine Component
-const GrowingVine = ({
-    path, delay, className, leaves, origin
-}: {
-    path: string, delay: number, className: string, leaves: LeafData[], origin: [number, number]
-}) => (
+const GrowingVine = ({ path, delay, className, style }: { path: string, delay: number, className: string, style?: any }) => (
     <motion.svg
-        className={`absolute pointer-events-none drop-shadow-2xl opacity-80 ${className}`}
+        className={`absolute pointer-events-none drop-shadow-2xl opacity-60 ${className}`}
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
+        style={style}
     >
-        <motion.g
-            style={{ originX: `${origin[0]}px`, originY: `${origin[1]}px` }}
-            initial={{ rotate: 0 }}
-            animate={{ rotate: [0, 1.5, -0.5, 0], scale: [1, 1.01, 0.99, 1] }}
-            transition={{ duration: 8 + Math.random() * 4, repeat: Infinity, ease: "easeInOut", delay: delay + 4 }}
-        >
-            <motion.path
-                d={path}
-                stroke="currentColor"
-                strokeWidth="0.6"
-                strokeLinecap="round"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 4, ease: "easeInOut", delay }}
-            />
-
-            {leaves.map((l, i) => (
-                <Leaf
-                    key={i}
-                    cx={l.cx} cy={l.cy} angle={l.angle} scale={l.scale}
-                    delay={delay + l.delayOffset}
-                />
-            ))}
-        </motion.g>
+        <motion.path
+            d={path}
+            stroke="currentColor"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 4, ease: "easeInOut", delay }}
+        />
+        {/* Adds a slight gentle sway to the fully grown vine */}
+        <motion.path
+            d={path}
+            stroke="currentColor"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            initial={{ pathLength: 1, opacity: 0 }}
+            animate={{
+                opacity: [0, 1, 0.7, 1],
+                scale: [1, 1.02, 0.98, 1],
+                rotate: [0, 1, -1, 0]
+            }}
+            transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: delay + 4
+            }}
+            style={{ transformOrigin: "top left" }}
+        />
     </motion.svg>
 );
 
@@ -116,6 +82,34 @@ export default function Hero() {
     // Smooth Parallax for the Glass Card
     const yTransform = useTransform(scrollY, [0, 500], [0, -100]);
 
+    // Mouse Tracking for Vine Physics
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        const { clientX, clientY } = e;
+        const { innerWidth, innerHeight } = window;
+        // Normalize mouse coordinates to [-1, 1]
+        mouseX.set((clientX / innerWidth) * 2 - 1);
+        mouseY.set((clientY / innerHeight) * 2 - 1);
+    };
+
+    const springConfig = { damping: 20, stiffness: 100, mass: 0.5 };
+
+    // Interactive Physics: Vines bend away when the cursor is near them
+    const tl_x = useSpring(useTransform(mouseX, [-1, 0, 1], [40, 0, 0]), springConfig);
+    const tl_y = useSpring(useTransform(mouseY, [-1, 0, 1], [40, 0, 0]), springConfig);
+
+    const tr_x = useSpring(useTransform(mouseX, [-1, 0, 1], [0, 0, -40]), springConfig);
+    const tr_y = useSpring(useTransform(mouseY, [-1, 0, 1], [40, 0, 0]), springConfig);
+
+    const bl_x = useSpring(useTransform(mouseX, [-1, 0, 1], [40, 0, 0]), springConfig);
+    const bl_y = useSpring(useTransform(mouseY, [-1, 0, 1], [0, 0, -40]), springConfig);
+
+    const br_x = useSpring(useTransform(mouseX, [-1, 0, 1], [0, 0, -40]), springConfig);
+    const br_y = useSpring(useTransform(mouseY, [-1, 0, 1], [0, 0, -40]), springConfig);
+
+
     const delays = Array.from({ length: 30 }, () => Math.random() * 20);
 
     // Intricate, organic SVG paths mapped to 100x100 viewBox
@@ -124,51 +118,35 @@ export default function Hero() {
     const vineBottomLeft = "M0,100 C15,80 5,40 35,50 S55,10 75,30";
     const vineBottomRight = "M100,100 C85,85 95,45 65,55 S45,5 25,25";
 
-    // Coordinates mapping foliage nodes along the vine curves
-    const leavesTL = [
-        { cx: 6, cy: 5, angle: 45, delayOffset: 0.4, scale: 0.8 },
-        { cx: 11, cy: 15, angle: -30, delayOffset: 0.8, scale: 1.2 },
-        { cx: 23, cy: 27, angle: 60, delayOffset: 1.6, scale: 1 },
-        { cx: 32, cy: 29, angle: -45, delayOffset: 2.0, scale: 1.3 },
-        { cx: 52, cy: 45, angle: 70, delayOffset: 2.8, scale: 1.1 },
-        { cx: 68, cy: 55, angle: -20, delayOffset: 3.4, scale: 0.9 },
-        { cx: 78, cy: 59, angle: 30, delayOffset: 3.8, scale: 0.7 },
-    ];
+    // Cinematic Typography Variants
+    const headline = "We build private sanctuaries out of thin air.";
+    const words = headline.split(" ");
 
-    const leavesTR = [
-        { cx: 92, cy: 10, angle: 135, delayOffset: 0.4, scale: 0.9 },
-        { cx: 85, cy: 23, angle: -140, delayOffset: 0.8, scale: 1.1 },
-        { cx: 75, cy: 42, angle: 110, delayOffset: 1.6, scale: 1.3 },
-        { cx: 65, cy: 42, angle: -120, delayOffset: 2.0, scale: 1.2 },
-        { cx: 45, cy: 62, angle: 150, delayOffset: 2.8, scale: 1 },
-        { cx: 30, cy: 78, angle: -160, delayOffset: 3.4, scale: 0.8 },
-        { cx: 22, cy: 73, angle: 110, delayOffset: 3.8, scale: 0.7 },
-    ];
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.12, delayChildren: 0.6 }
+        }
+    };
 
-    const leavesBL = [
-        { cx: 5, cy: 90, angle: -45, delayOffset: 0.4, scale: 1.1 },
-        { cx: 12, cy: 72, angle: 30, delayOffset: 0.8, scale: 0.9 },
-        { cx: 18, cy: 52, angle: -60, delayOffset: 1.6, scale: 1.2 },
-        { cx: 28, cy: 48, angle: 45, delayOffset: 2.0, scale: 1.3 },
-        { cx: 48, cy: 28, angle: -70, delayOffset: 2.8, scale: 1.1 },
-        { cx: 62, cy: 20, angle: 20, delayOffset: 3.4, scale: 0.8 },
-        { cx: 72, cy: 26, angle: -30, delayOffset: 3.8, scale: 0.7 },
-    ];
-
-    const leavesBR = [
-        { cx: 95, cy: 92, angle: -135, delayOffset: 0.4, scale: 1 },
-        { cx: 88, cy: 75, angle: 140, delayOffset: 0.8, scale: 1.2 },
-        { cx: 80, cy: 58, angle: -110, delayOffset: 1.6, scale: 1.1 },
-        { cx: 68, cy: 52, angle: 120, delayOffset: 2.0, scale: 1.3 },
-        { cx: 48, cy: 35, angle: -150, delayOffset: 2.8, scale: 0.9 },
-        { cx: 35, cy: 18, angle: 160, delayOffset: 3.4, scale: 0.8 },
-        { cx: 28, cy: 22, angle: -120, delayOffset: 3.8, scale: 0.7 },
-    ];
+    const wordVariants = {
+        hidden: { opacity: 0, y: 30, rotateX: -60 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            rotateX: 0,
+            transition: { type: "spring", damping: 14, stiffness: 120 }
+        }
+    };
 
     return (
-        <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#0a120c]">
+        <section
+            className="relative h-screen flex items-center justify-center overflow-hidden bg-[#0a120c]"
+            onMouseMove={handleMouseMove}
+        >
             {/* CSS Animated 'Wind in the Canopy' Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-b from-forest-canopy/40 to-[#0a120c] z-10" />
 
                 {/* Undulating CSS Blobs simulating leaves passing over the sun */}
@@ -197,19 +175,19 @@ export default function Hero() {
                 ))}
             </div>
 
-            {/* Generative SVG Vine System with Sprouting Leaves */}
+            {/* Generative SVG Vine System */}
             <div className="absolute inset-0 z-20 pointer-events-none text-pale-sage">
-                <GrowingVine origin={[0, 0]} path={vineTopLeft} delay={0} className="w-[40vw] h-[40vh] top-0 left-0" leaves={leavesTL} />
-                <GrowingVine origin={[100, 0]} path={vineTopRight} delay={0.5} className="w-[45vw] h-[50vh] top-0 right-0" leaves={leavesTR} />
-                <GrowingVine origin={[0, 100]} path={vineBottomLeft} delay={1} className="w-[35vw] h-[45vh] bottom-0 left-0" leaves={leavesBL} />
-                <GrowingVine origin={[100, 100]} path={vineBottomRight} delay={1.5} className="w-[50vw] h-[40vh] bottom-0 right-0" leaves={leavesBR} />
+                <GrowingVine path={vineTopLeft} delay={0} className="w-[40vw] h-[40vh] top-0 left-0" style={{ x: tl_x, y: tl_y }} />
+                <GrowingVine path={vineTopRight} delay={0.5} className="w-[45vw] h-[50vh] top-0 right-0" style={{ x: tr_x, y: tr_y }} />
+                <GrowingVine path={vineBottomLeft} delay={1} className="w-[35vw] h-[45vh] bottom-0 left-0" style={{ x: bl_x, y: bl_y }} />
+                <GrowingVine path={vineBottomRight} delay={1.5} className="w-[50vw] h-[40vh] bottom-0 right-0" style={{ x: br_x, y: br_y }} />
             </div>
 
             {/* Typography and Content enclosed in a Glassmorphic Greenhouse Card */}
             <motion.div
                 style={{ y: yTransform }}
                 className="relative z-30 text-center px-8 py-16 md:px-16 md:py-24 max-w-5xl mx-auto flex flex-col items-center
-                           bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl"
+                           bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl pointer-events-auto"
             >
                 <div className="absolute inset-0 bg-noise opacity-5 rounded-3xl mix-blend-overlay pointer-events-none" />
 
@@ -222,19 +200,25 @@ export default function Hero() {
                     Outdoor Living & Biophilic Design Studio
                 </motion.p>
 
+                {/* Cinematic Typography Reveal */}
                 <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.8 }}
-                    className="text-5xl md:text-7xl lg:text-8xl text-ivory font-serif leading-tight mb-10 drop-shadow-md"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    style={{ perspective: 1000 }}
+                    className="flex flex-wrap justify-center gap-x-3 gap-y-2 text-5xl md:text-7xl lg:text-8xl text-ivory font-serif leading-tight mb-10 drop-shadow-md"
                 >
-                    We build private sanctuaries out of thin air.
+                    {words.map((word, i) => (
+                        <motion.span key={i} variants={wordVariants} className="inline-block origin-bottom filter drop-shadow-sm">
+                            {word}
+                        </motion.span>
+                    ))}
                 </motion.h1>
 
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8, duration: 0.8 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.5, type: "spring", stiffness: 100 }}
                 >
                     <button className="bg-forest-canopy text-ivory px-10 py-5 rounded-full text-lg font-medium hover:bg-forest-canopy/80 hover:scale-105 transition-all flex items-center gap-3 group border border-pale-sage/30 shadow-[0_0_20px_rgba(42,59,44,0.4)]">
                         Book a Site Visit
