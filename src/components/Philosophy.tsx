@@ -59,24 +59,24 @@ export default function Philosophy() {
                     <motion.div style={{ y: yParallax }} className="grid grid-cols-2 gap-6 h-[600px] relative mt-12 lg:mt-0">
                         <div className="col-span-1 space-y-6 translate-y-12">
                             <img
-                                src="https://images.unsplash.com/photo-1628744448840-55bdb2497bd4?q=80&w=1000&auto=format&fit=crop"
+                                src="/wpc_decking_detail.jpeg"
                                 alt="WPC Decking Detail"
                                 className="w-full h-64 object-cover rounded-sm"
                             />
                             <img
-                                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1000&auto=format&fit=crop"
+                                src="/biophilic_vertical_wall.jpeg"
                                 alt="Biophilic Design"
                                 className="w-full h-80 object-cover rounded-sm"
                             />
                         </div>
                         <div className="col-span-1 space-y-6">
                             <img
-                                src="https://images.unsplash.com/photo-1595844730298-b960fa25e9e3?q=80&w=1000&auto=format&fit=crop"
+                                src="/pergola_lighting.jpeg"
                                 alt="Pergola Lighting"
                                 className="w-full h-80 object-cover rounded-sm"
                             />
                             <img
-                                src="https://images.unsplash.com/photo-1616046229478-9901c5536aee?q=80&w=1000&auto=format&fit=crop"
+                                src="/minimalist_terrace_decor.jpeg"
                                 alt="Minimalist Design"
                                 className="w-full h-64 object-cover rounded-sm"
                             />
