@@ -1,44 +1,74 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+// Sprouting Leaf Component with wind physics
+const Leaf = ({ cx, cy, angle, scale = 1, delay }: { cx: number, cy: number, angle: number, scale?: number, delay: number }) => {
+    const flutterDuration = 3 + Math.random() * 3;
+
+    return (
+        <motion.g
+            style={{ x: cx, y: cy }}
+            initial={{ scale: 0, opacity: 0, rotate: angle }}
+            animate={{ scale: scale, opacity: 1, rotate: angle }}
+            transition={{ delay, duration: 1, type: "spring", bounce: 0.5 }}
+        >
+            <motion.path
+                // Minimalist asymmetric leaf shape originating at 0,0
+                d="M0,0 C1.5,-4 5,-4 8,-1.5 C5,1.5 1.5,4 0,0 Z"
+                fill="currentColor"
+                opacity="0.85"
+                style={{ originX: "0px", originY: "0px" }}
+                animate={{ rotate: [0, 10, -5, 0] }}
+                transition={{
+                    duration: flutterDuration,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: delay + Math.random()
+                }}
+            />
+        </motion.g>
+    );
+};
+
+type LeafData = { cx: number; cy: number; angle: number; delayOffset: number; scale?: number };
+
 // Generative SVG Vine Component
-const GrowingVine = ({ path, delay, className }: { path: string, delay: number, className: string }) => (
+const GrowingVine = ({
+    path, delay, className, leaves, origin
+}: {
+    path: string, delay: number, className: string, leaves: LeafData[], origin: [number, number]
+}) => (
     <motion.svg
-        className={`absolute pointer-events-none drop-shadow-2xl opacity-60 ${className}`}
+        className={`absolute pointer-events-none drop-shadow-2xl opacity-80 ${className}`}
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
     >
-        <motion.path
-            d={path}
-            stroke="currentColor"
-            strokeWidth="0.5"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 4, ease: "easeInOut", delay }}
-        />
-        {/* Adds a slight gentle sway to the fully grown vine */}
-        <motion.path
-            d={path}
-            stroke="currentColor"
-            strokeWidth="0.5"
-            strokeLinecap="round"
-            initial={{ pathLength: 1, opacity: 0 }}
-            animate={{
-                opacity: [0, 1, 0.7, 1],
-                scale: [1, 1.02, 0.98, 1],
-                rotate: [0, 1, -1, 0]
-            }}
-            transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: delay + 4
-            }}
-            style={{ transformOrigin: "top left" }}
-        />
+        <motion.g
+            style={{ originX: `${origin[0]}px`, originY: `${origin[1]}px` }}
+            initial={{ rotate: 0 }}
+            animate={{ rotate: [0, 1.5, -0.5, 0], scale: [1, 1.01, 0.99, 1] }}
+            transition={{ duration: 8 + Math.random() * 4, repeat: Infinity, ease: "easeInOut", delay: delay + 4 }}
+        >
+            <motion.path
+                d={path}
+                stroke="currentColor"
+                strokeWidth="0.6"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 4, ease: "easeInOut", delay }}
+            />
+
+            {leaves.map((l, i) => (
+                <Leaf
+                    key={i}
+                    cx={l.cx} cy={l.cy} angle={l.angle} scale={l.scale}
+                    delay={delay + l.delayOffset}
+                />
+            ))}
+        </motion.g>
     </motion.svg>
 );
 
@@ -89,6 +119,47 @@ export default function Hero() {
     const vineBottomLeft = "M0,100 C15,80 5,40 35,50 S55,10 75,30";
     const vineBottomRight = "M100,100 C85,85 95,45 65,55 S45,5 25,25";
 
+    // Coordinates mapping foliage nodes along the vine curves
+    const leavesTL = [
+        { cx: 6, cy: 5, angle: 45, delayOffset: 0.4, scale: 0.8 },
+        { cx: 11, cy: 15, angle: -30, delayOffset: 0.8, scale: 1.2 },
+        { cx: 23, cy: 27, angle: 60, delayOffset: 1.6, scale: 1 },
+        { cx: 32, cy: 29, angle: -45, delayOffset: 2.0, scale: 1.3 },
+        { cx: 52, cy: 45, angle: 70, delayOffset: 2.8, scale: 1.1 },
+        { cx: 68, cy: 55, angle: -20, delayOffset: 3.4, scale: 0.9 },
+        { cx: 78, cy: 59, angle: 30, delayOffset: 3.8, scale: 0.7 },
+    ];
+
+    const leavesTR = [
+        { cx: 92, cy: 10, angle: 135, delayOffset: 0.4, scale: 0.9 },
+        { cx: 85, cy: 23, angle: -140, delayOffset: 0.8, scale: 1.1 },
+        { cx: 75, cy: 42, angle: 110, delayOffset: 1.6, scale: 1.3 },
+        { cx: 65, cy: 42, angle: -120, delayOffset: 2.0, scale: 1.2 },
+        { cx: 45, cy: 62, angle: 150, delayOffset: 2.8, scale: 1 },
+        { cx: 30, cy: 78, angle: -160, delayOffset: 3.4, scale: 0.8 },
+        { cx: 22, cy: 73, angle: 110, delayOffset: 3.8, scale: 0.7 },
+    ];
+
+    const leavesBL = [
+        { cx: 5, cy: 90, angle: -45, delayOffset: 0.4, scale: 1.1 },
+        { cx: 12, cy: 72, angle: 30, delayOffset: 0.8, scale: 0.9 },
+        { cx: 18, cy: 52, angle: -60, delayOffset: 1.6, scale: 1.2 },
+        { cx: 28, cy: 48, angle: 45, delayOffset: 2.0, scale: 1.3 },
+        { cx: 48, cy: 28, angle: -70, delayOffset: 2.8, scale: 1.1 },
+        { cx: 62, cy: 20, angle: 20, delayOffset: 3.4, scale: 0.8 },
+        { cx: 72, cy: 26, angle: -30, delayOffset: 3.8, scale: 0.7 },
+    ];
+
+    const leavesBR = [
+        { cx: 95, cy: 92, angle: -135, delayOffset: 0.4, scale: 1 },
+        { cx: 88, cy: 75, angle: 140, delayOffset: 0.8, scale: 1.2 },
+        { cx: 80, cy: 58, angle: -110, delayOffset: 1.6, scale: 1.1 },
+        { cx: 68, cy: 52, angle: 120, delayOffset: 2.0, scale: 1.3 },
+        { cx: 48, cy: 35, angle: -150, delayOffset: 2.8, scale: 0.9 },
+        { cx: 35, cy: 18, angle: 160, delayOffset: 3.4, scale: 0.8 },
+        { cx: 28, cy: 22, angle: -120, delayOffset: 3.8, scale: 0.7 },
+    ];
+
     return (
         <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#0a120c]">
             {/* CSS Animated 'Wind in the Canopy' Background */}
@@ -121,12 +192,12 @@ export default function Hero() {
                 ))}
             </div>
 
-            {/* Generative SVG Vine System */}
+            {/* Generative SVG Vine System with Sprouting Leaves */}
             <div className="absolute inset-0 z-20 pointer-events-none text-pale-sage">
-                <GrowingVine path={vineTopLeft} delay={0} className="w-[40vw] h-[40vh] top-0 left-0" />
-                <GrowingVine path={vineTopRight} delay={0.5} className="w-[45vw] h-[50vh] top-0 right-0" />
-                <GrowingVine path={vineBottomLeft} delay={1} className="w-[35vw] h-[45vh] bottom-0 left-0" />
-                <GrowingVine path={vineBottomRight} delay={1.5} className="w-[50vw] h-[40vh] bottom-0 right-0" />
+                <GrowingVine origin={[0, 0]} path={vineTopLeft} delay={0} className="w-[40vw] h-[40vh] top-0 left-0" leaves={leavesTL} />
+                <GrowingVine origin={[100, 0]} path={vineTopRight} delay={0.5} className="w-[45vw] h-[50vh] top-0 right-0" leaves={leavesTR} />
+                <GrowingVine origin={[0, 100]} path={vineBottomLeft} delay={1} className="w-[35vw] h-[45vh] bottom-0 left-0" leaves={leavesBL} />
+                <GrowingVine origin={[100, 100]} path={vineBottomRight} delay={1.5} className="w-[50vw] h-[40vh] bottom-0 right-0" leaves={leavesBR} />
             </div>
 
             {/* Typography and Content enclosed in a Glassmorphic Greenhouse Card */}
