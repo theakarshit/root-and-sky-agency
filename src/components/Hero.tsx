@@ -136,7 +136,7 @@ export default function Hero() {
             opacity: 1,
             y: 0,
             rotateX: 0,
-            transition: { type: "spring", damping: 14, stiffness: 120 }
+            transition: { type: "spring" as any, damping: 14, stiffness: 120 }
         }
     };
 
