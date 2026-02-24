@@ -1,6 +1,47 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+// Generative SVG Vine Component
+const GrowingVine = ({ path, delay, className }: { path: string, delay: number, className: string }) => (
+    <motion.svg
+        className={`absolute pointer-events-none drop-shadow-2xl opacity-60 ${className}`}
+        viewBox="0 0 100 100"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+    >
+        <motion.path
+            d={path}
+            stroke="currentColor"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 4, ease: "easeInOut", delay }}
+        />
+        {/* Adds a slight gentle sway to the fully grown vine */}
+        <motion.path
+            d={path}
+            stroke="currentColor"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            initial={{ pathLength: 1, opacity: 0 }}
+            animate={{
+                opacity: [0, 1, 0.7, 1],
+                scale: [1, 1.02, 0.98, 1],
+                rotate: [0, 1, -1, 0]
+            }}
+            transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: delay + 4
+            }}
+            style={{ transformOrigin: "top left" }}
+        />
+    </motion.svg>
+);
+
 // Firefly Particle Component
 const Firefly = ({ delay }: { delay: number }) => {
     const [xPos, setXPos] = useState(0);
@@ -37,76 +78,64 @@ const Firefly = ({ delay }: { delay: number }) => {
 export default function Hero() {
     const { scrollY } = useScroll();
 
-    // Parallax scroll transforms for the 4 corners: they move outwards as you scroll down
-    const tl_x = useTransform(scrollY, [0, 500], [0, -150]);
-    const tl_y = useTransform(scrollY, [0, 500], [0, -150]);
+    // Smooth Parallax for the Glass Card
+    const yTransform = useTransform(scrollY, [0, 500], [0, -100]);
 
-    const tr_x = useTransform(scrollY, [0, 500], [0, 150]);
-    const tr_y = useTransform(scrollY, [0, 500], [0, -150]);
-
-    const bl_x = useTransform(scrollY, [0, 500], [0, -150]);
-    const bl_y = useTransform(scrollY, [0, 500], [0, 150]);
-
-    const br_x = useTransform(scrollY, [0, 500], [0, 150]);
-    const br_y = useTransform(scrollY, [0, 500], [0, 150]);
-
-    // Generate random delays for fireflies to stagger their appearance
     const delays = Array.from({ length: 30 }, () => Math.random() * 20);
+
+    // Intricate, organic SVG paths mapped to 100x100 viewBox
+    const vineTopLeft = "M0,0 C20,10 10,40 40,30 S60,80 80,60";
+    const vineTopRight = "M100,0 C80,20 90,50 60,40 S30,90 20,70";
+    const vineBottomLeft = "M0,100 C15,80 5,40 35,50 S55,10 75,30";
+    const vineBottomRight = "M100,100 C85,85 95,45 65,55 S45,5 25,25";
 
     return (
         <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#0a120c]">
-            {/* Deep Green Ambient Background */}
-            <div className="absolute inset-0 z-0">
+            {/* CSS Animated 'Wind in the Canopy' Background */}
+            <div className="absolute inset-0 z-0 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-forest-canopy/40 to-[#0a120c] z-10" />
+
+                {/* Undulating CSS Blobs simulating leaves passing over the sun */}
+                <motion.div
+                    className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-pale-sage/10 mix-blend-overlay blur-[80px] rounded-full"
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 90, 0],
+                        borderRadius: ["40% 60% 70% 30%", "60% 40% 30% 70%", "40% 60% 70% 30%"]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                    className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-forest-canopy/20 mix-blend-overlay blur-[100px] rounded-full"
+                    animate={{
+                        scale: [1, 1.5, 1],
+                        rotate: [0, -90, 0],
+                        borderRadius: ["60% 40% 30% 70%", "40% 60% 70% 30%", "60% 40% 30% 70%"]
+                    }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+                />
+
                 {/* Firefly Particles */}
                 {delays.map((delay, index) => (
                     <Firefly key={index} delay={delay} />
                 ))}
             </div>
 
-            {/* Corner Foliage Canopy */}
-            <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden mix-blend-normal">
-                <motion.img
-                    src="/foliage_top_left.png"
-                    alt="Top Left Foliage"
-                    initial={{ scale: 1.1, opacity: 0, x: -50, y: -50 }}
-                    animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    style={{ x: tl_x, y: tl_y }}
-                    className="absolute top-[-5%] left-[-5%] w-[60%] md:w-[45%] max-w-[550px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] contrast-125 saturate-150"
-                />
-                <motion.img
-                    src="/foliage_top_right.png"
-                    alt="Top Right Foliage"
-                    initial={{ scale: 1.1, opacity: 0, x: 50, y: -50 }}
-                    animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
-                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                    style={{ x: tr_x, y: tr_y }}
-                    className="absolute top-[-5%] right-[-5%] w-[60%] md:w-[45%] max-w-[550px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] contrast-125 saturate-150"
-                />
-                <motion.img
-                    src="/foliage_bottom_left.png"
-                    alt="Bottom Left Foliage"
-                    initial={{ scale: 1.1, opacity: 0, x: -50, y: 50 }}
-                    animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
-                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.1 }}
-                    style={{ x: bl_x, y: bl_y }}
-                    className="absolute bottom-[-5%] left-[-5%] w-[60%] md:w-[45%] max-w-[550px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] contrast-125 saturate-150"
-                />
-                <motion.img
-                    src="/foliage_bottom_right.png"
-                    alt="Bottom Right Foliage"
-                    initial={{ scale: 1.1, opacity: 0, x: 50, y: 50 }}
-                    animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
-                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
-                    style={{ x: br_x, y: br_y }}
-                    className="absolute bottom-[-5%] right-[-5%] w-[60%] md:w-[45%] max-w-[550px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] contrast-125 saturate-150"
-                />
+            {/* Generative SVG Vine System */}
+            <div className="absolute inset-0 z-20 pointer-events-none text-pale-sage">
+                <GrowingVine path={vineTopLeft} delay={0} className="w-[40vw] h-[40vh] top-0 left-0" />
+                <GrowingVine path={vineTopRight} delay={0.5} className="w-[45vw] h-[50vh] top-0 right-0" />
+                <GrowingVine path={vineBottomLeft} delay={1} className="w-[35vw] h-[45vh] bottom-0 left-0" />
+                <GrowingVine path={vineBottomRight} delay={1.5} className="w-[50vw] h-[40vh] bottom-0 right-0" />
             </div>
 
             {/* Typography and Content enclosed in a Glassmorphic Greenhouse Card */}
-            <div className="relative z-30 text-center px-8 py-16 md:px-16 md:py-24 max-w-5xl mx-auto flex flex-col items-center
-                            bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
+            <motion.div
+                style={{ y: yTransform }}
+                className="relative z-30 text-center px-8 py-16 md:px-16 md:py-24 max-w-5xl mx-auto flex flex-col items-center
+                           bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl"
+            >
+                <div className="absolute inset-0 bg-noise opacity-5 rounded-3xl mix-blend-overlay pointer-events-none" />
 
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
@@ -131,7 +160,7 @@ export default function Hero() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8, duration: 0.8 }}
                 >
-                    <button className="bg-forest-canopy text-ivory px-10 py-5 rounded-full text-lg font-medium hover:bg-forest-canopy/80 hover:scale-105 transition-all flex items-center gap-3 group border border-pale-sage/30 shadow-lg">
+                    <button className="bg-forest-canopy text-ivory px-10 py-5 rounded-full text-lg font-medium hover:bg-forest-canopy/80 hover:scale-105 transition-all flex items-center gap-3 group border border-pale-sage/30 shadow-[0_0_20px_rgba(42,59,44,0.4)]">
                         Book a Site Visit
                         <svg
                             className="w-5 h-5 group-hover:translate-x-1 transition-transform"
@@ -144,7 +173,7 @@ export default function Hero() {
                         </svg>
                     </button>
                 </motion.div>
-            </div>
+            </motion.div>
         </section>
     );
 }
