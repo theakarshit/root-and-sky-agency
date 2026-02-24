@@ -12,11 +12,7 @@ const Leaf = ({ cx, cy, angle, scale = 1, delay }: { cx: number, cy: number, ang
             animate={{ scale: scale, opacity: 1, rotate: angle }}
             transition={{ delay, duration: 1, type: "spring", bounce: 0.5 }}
         >
-            <motion.path
-                // Minimalist asymmetric leaf shape originating at 0,0
-                d="M0,0 C1.5,-4 5,-4 8,-1.5 C5,1.5 1.5,4 0,0 Z"
-                fill="currentColor"
-                opacity="0.85"
+            <motion.g
                 style={{ originX: "0px", originY: "0px" }}
                 animate={{ rotate: [0, 10, -5, 0] }}
                 transition={{
@@ -25,7 +21,16 @@ const Leaf = ({ cx, cy, angle, scale = 1, delay }: { cx: number, cy: number, ang
                     ease: "easeInOut",
                     delay: delay + Math.random()
                 }}
-            />
+            >
+                {/* Elegant curving stem */}
+                <path d="M0,0 Q1.5,-1.5 3.5,0" stroke="currentColor" strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                {/* Leaf shape extending from the stem */}
+                <path
+                    d="M3.5,0 C5,-4 8.5,-4 11.5,-1.5 C8.5,1.5 5,4 3.5,0 Z"
+                    fill="currentColor"
+                    opacity="0.85"
+                />
+            </motion.g>
         </motion.g>
     );
 };
